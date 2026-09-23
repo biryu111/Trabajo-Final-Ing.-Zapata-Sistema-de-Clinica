@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id           String   @id @default(uuid())
+  nombre       String
+  email        String   @unique
+  passwordHash String
+  telefono     String?
+  rol          String   @default("CLIENTE") // ADMIN | CLIENTE
+  activo       Boolean  @default(true)
+  creadoEn     DateTime @default(now())
+
+  // Relaciones
+  citas        Cita[]   @relation("PacienteCitas")
+  doctorPerfil Doctor?  @relation("UsuarioDoctor")
+}
+
+model Especialidad {
+  id          String   @id @default(uuid())
+  nombre      String   @unique
+  descripcion String?
+  creadoEn    DateTime @default(now())
+
+  doctores    Doctor[]
+}
+
+model Doctor {
+  id             String       @id @default(uuid())
+  usuarioId      String?      @unique
+  nombre         String
+  biografia      String?
+  activo         Boolean      @default(true)
+  especialidadId String
+  creadoEn       DateTime     @default(now())
+
+  // Relaciones
+  usuario        Usuario?     @relation("UsuarioDoctor", fields: [usuarioId], references: [id], onDelete: SetNull)
+  especialidad   Especialidad @relation(fields: [especialidadId], references: [id], onDelete: Cascade)
+  horarios       Horario[]
+  citas          Cita[]
+}
+
+model Horario {
+  id         String   @id @default(uuid())
+  doctorId   String
+  diaSemana  Int      // 1=Lunes, 2=Martes, ..., 7=Domingo
+  horaInicio String   // ej. "09:00"
+  horaFin    String   // ej. "17:00"
+
+  doctor     Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+}
+
+model Cita {
+  id         String   @id @default(uuid())
+  pacienteId String
+  doctorId   String
+  fecha      DateTime
+  horaInicio String   // ej. "09:00"
+  horaFin    String   // ej. "09:30"
+  estado     String   @default("CONFIRMADA") // PENDIENTE | CONFIRMADA | CANCELADA | ATENDIDA
+  creadoEn   DateTime @default(now())
+
+  paciente   Usuario  @relation("PacienteCitas", fields: [pacienteId], references: [id], onDelete: Cascade)
+  doctor     Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([doctorId, fecha])
+  @@index([pacienteId])
+}

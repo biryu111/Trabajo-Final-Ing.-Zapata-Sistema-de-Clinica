@@ -1,0 +1,1 @@
+# Sistema de Gestión Clínica Lee estos archivos antes de programar cualquier cosa: @Instrucciones/01-backend-logica-negocio.md @Instrucciones/02-diseno-visual.md @Instrucciones/03-cache-base-datos.md Si hay archivos dentro de Extra/, léelos también y respétalos.
