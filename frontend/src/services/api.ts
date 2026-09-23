@@ -9,7 +9,7 @@ import {
   MetricasAdmin,
 } from '../types';
 
-const rawApiUrl = import.meta.env.VITE_API_URL || '/api';
+const rawApiUrl = (import.meta as any).env?.VITE_API_URL || '/api';
 const API_BASE_URL = rawApiUrl.endsWith('/') ? rawApiUrl.slice(0, -1) : rawApiUrl;
 
 export const api = axios.create({
