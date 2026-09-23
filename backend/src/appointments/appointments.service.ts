@@ -7,7 +7,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
-import { CreateCitaDto, ReprogramarCitaDto, AdminUpdateCitaDto, EstadoCita } from './appointments.dto';
+import { CreateCitaDto, ReprogramarCitaDto, AdminUpdateCitaDto } from './appointments.dto';
+import { EstadoCita } from '@prisma/client';
 
 @Injectable()
 export class AppointmentsService {
@@ -59,7 +60,7 @@ export class AppointmentsService {
           fecha: fechaObj,
           horaInicio: dto.horaInicio,
           horaFin: dto.horaFin,
-          estado: 'CONFIRMADA',
+          estado: EstadoCita.CONFIRMADA,
         },
         include: {
           doctor: {
@@ -102,7 +103,7 @@ export class AppointmentsService {
       throw new ForbiddenException('No tiene permisos para modificar esta cita');
     }
 
-    if (cita.estado === 'CANCELADA') {
+    if (cita.estado === EstadoCita.CANCELADA) {
       throw new BadRequestException('La cita ya se encuentra cancelada');
     }
 
@@ -120,7 +121,7 @@ export class AppointmentsService {
 
     const citaCancelada = await this.prisma.cita.update({
       where: { id: citaId },
-      data: { estado: 'CANCELADA' },
+      data: { estado: EstadoCita.CANCELADA },
       include: { doctor: true },
     });
 
@@ -158,7 +159,7 @@ export class AppointmentsService {
           fecha: nuevaFechaObj,
           horaInicio: dto.horaInicio,
           horaFin: dto.horaFin,
-          estado: 'CONFIRMADA',
+          estado: EstadoCita.CONFIRMADA,
         },
         include: { doctor: { include: { especialidad: true } } },
       });

@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
-
-export type EstadoCita = 'PENDIENTE' | 'CONFIRMADA' | 'CANCELADA' | 'ATENDIDA';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
+import { EstadoCita } from '@prisma/client';
 
 export class CreateCitaDto {
   @ApiProperty({ example: 'UUID_DOCTOR' })
@@ -43,9 +42,9 @@ export class ReprogramarCitaDto {
 }
 
 export class AdminUpdateCitaDto {
-  @ApiPropertyOptional({ example: 'CONFIRMADA' })
+  @ApiPropertyOptional({ enum: EstadoCita })
   @IsOptional()
-  @IsString()
+  @IsEnum(EstadoCita)
   estado?: EstadoCita;
 
   @ApiPropertyOptional({ example: 'UUID_DOCTOR' })

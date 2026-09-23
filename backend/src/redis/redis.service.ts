@@ -1,54 +1,66 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
-import Redis from 'ioredis';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Redis as UpstashRedis } from '@upstash/redis';
+import IORedis from 'ioredis';
 
 @Injectable()
-export class RedisService implements OnModuleInit, OnModuleDestroy {
+export class RedisService implements OnModuleInit {
   private readonly logger = new Logger(RedisService.name);
-  private client: Redis | null = null;
+  private upstashClient: UpstashRedis | null = null;
+  private ioRedisClient: IORedis | null = null;
   private inMemoryCache = new Map<string, { value: string; expiresAt: number }>();
-  private isConnected = false;
 
   async onModuleInit() {
-    const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
-    try {
-      this.client = new Redis(redisUrl, {
-        lazyConnect: true,
-        maxRetriesPerRequest: 1,
-        retryStrategy: () => null, // No reintentar indefinidamente si no está activo
-      });
+    const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+    const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-      this.client.on('connect', () => {
-        this.isConnected = true;
-        this.logger.log('Conectado exitosamente a Redis Cache');
-      });
-
-      this.client.on('error', (err) => {
-        this.isConnected = false;
-        this.logger.warn(`Redis no disponible (${err.message}). Usando caché en memoria de respaldo.`);
-      });
-
-      await this.client.connect().catch((err) => {
-        this.isConnected = false;
-        this.logger.warn(`Fallback: Redis no disponible. Usando caché en memoria fallback (${err.message})`);
-      });
-    } catch (e) {
-      this.isConnected = false;
-      this.logger.warn('Modo Fallback activado para la capa de caché.');
+    if (upstashUrl && upstashToken) {
+      try {
+        this.upstashClient = new UpstashRedis({
+          url: upstashUrl,
+          token: upstashToken,
+        });
+        this.logger.log('Conectado exitosamente a Upstash Redis (REST Cloud)');
+        return;
+      } catch (err: any) {
+        this.logger.warn(`Error inicializando Upstash Redis: ${err.message}`);
+      }
     }
-  }
 
-  async onModuleDestroy() {
-    if (this.client) {
-      await this.client.quit().catch(() => null);
+    const redisUrl = process.env.REDIS_URL;
+    if (redisUrl) {
+      try {
+        this.ioRedisClient = new IORedis(redisUrl, {
+          lazyConnect: true,
+          maxRetriesPerRequest: 1,
+          retryStrategy: () => null,
+        });
+        await this.ioRedisClient.connect().catch(() => null);
+        this.logger.log('Conectado a Redis mediante IORedis');
+        return;
+      } catch (err: any) {
+        this.logger.warn(`IORedis no disponible (${err.message}). Usando caché en memoria.`);
+      }
     }
+
+    this.logger.log('Usando caché en memoria de respaldo.');
   }
 
   async get(key: string): Promise<string | null> {
-    if (this.isConnected && this.client) {
+    if (this.upstashClient) {
       try {
-        return await this.client.get(key);
+        const val = await this.upstashClient.get<any>(key);
+        if (val === null || val === undefined) return null;
+        return typeof val === 'string' ? val : JSON.stringify(val);
+      } catch (err: any) {
+        this.logger.warn(`Error leyendo de Upstash: ${err.message}`);
+      }
+    }
+
+    if (this.ioRedisClient) {
+      try {
+        return await this.ioRedisClient.get(key);
       } catch (err) {
-        // Ignorar error y caer al fallback
+        // Fallback
       }
     }
 
@@ -62,12 +74,21 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   async set(key: string, value: string, ttlSeconds: number = 60): Promise<void> {
-    if (this.isConnected && this.client) {
+    if (this.upstashClient) {
       try {
-        await this.client.set(key, value, 'EX', ttlSeconds);
+        await this.upstashClient.set(key, value, { ex: ttlSeconds });
+        return;
+      } catch (err: any) {
+        this.logger.warn(`Error escribiendo en Upstash: ${err.message}`);
+      }
+    }
+
+    if (this.ioRedisClient) {
+      try {
+        await this.ioRedisClient.set(key, value, 'EX', ttlSeconds);
         return;
       } catch (err) {
-        // Ignorar error y caer al fallback
+        // Fallback
       }
     }
 
@@ -78,30 +99,42 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   async del(key: string): Promise<void> {
-    if (this.isConnected && this.client) {
+    if (this.upstashClient) {
       try {
-        await this.client.del(key);
-      } catch (err) {
-        // Ignorar error
-      }
+        await this.upstashClient.del(key);
+      } catch (err) {}
     }
+
+    if (this.ioRedisClient) {
+      try {
+        await this.ioRedisClient.del(key);
+      } catch (err) {}
+    }
+
     this.inMemoryCache.delete(key);
   }
 
   async delByPattern(pattern: string): Promise<void> {
-    if (this.isConnected && this.client) {
+    if (this.upstashClient) {
       try {
-        const stream = this.client.scanStream({ match: pattern });
+        const keys = await this.upstashClient.keys(pattern);
+        if (keys && keys.length > 0) {
+          await this.upstashClient.del(...keys);
+        }
+      } catch (err) {}
+    }
+
+    if (this.ioRedisClient) {
+      try {
+        const stream = this.ioRedisClient.scanStream({ match: pattern });
         stream.on('data', (keys: string[]) => {
           if (keys.length) {
-            const pipeline = this.client!.pipeline();
+            const pipeline = this.ioRedisClient!.pipeline();
             keys.forEach((key) => pipeline.del(key));
             pipeline.exec();
           }
         });
-      } catch (err) {
-        // Ignorar
-      }
+      } catch (err) {}
     }
 
     const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');

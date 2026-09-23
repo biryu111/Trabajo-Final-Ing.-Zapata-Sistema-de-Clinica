@@ -10,11 +10,12 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { AppointmentsService } from './appointments.service';
-import { CreateCitaDto, ReprogramarCitaDto, AdminUpdateCitaDto, EstadoCita } from './appointments.dto';
+import { CreateCitaDto, ReprogramarCitaDto, AdminUpdateCitaDto } from './appointments.dto';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { GetUser } from '../common/decorators/get-user.decorator';
+import { Rol, EstadoCita } from '@prisma/client';
 
 @ApiTags('Citas Médicas')
 @ApiBearerAuth()
@@ -59,11 +60,11 @@ export class AppointmentsController {
 
   @Get('admin/citas')
   @UseGuards(RolesGuard)
-  @Roles('ADMIN')
+  @Roles(Rol.ADMIN)
   @ApiOperation({ summary: 'Listar todas las citas registradas en el sistema (Solo Admin)' })
   @ApiQuery({ name: 'doctor', required: false })
   @ApiQuery({ name: 'fecha', required: false, example: '2026-09-25' })
-  @ApiQuery({ name: 'estado', required: false })
+  @ApiQuery({ name: 'estado', required: false, enum: EstadoCita })
   async getAllCitas(
     @Query('doctor') doctor?: string,
     @Query('fecha') fecha?: string,
@@ -74,7 +75,7 @@ export class AppointmentsController {
 
   @Patch('admin/citas/:id')
   @UseGuards(RolesGuard)
-  @Roles('ADMIN')
+  @Roles(Rol.ADMIN)
   @ApiOperation({ summary: 'Actualizar estado o reasignar doctor a una cita (Solo Admin)' })
   async updateCitaAdmin(
     @Param('id') citaId: string,

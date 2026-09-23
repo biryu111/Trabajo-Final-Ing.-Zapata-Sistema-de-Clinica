@@ -3,8 +3,20 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  ADMIN
+  CLIENTE
+}
+
+enum EstadoCita {
+  PENDIENTE
+  CONFIRMADA
+  CANCELADA
+  ATENDIDA
 }
 
 model Usuario {
@@ -13,7 +25,7 @@ model Usuario {
   email        String   @unique
   passwordHash String
   telefono     String?
-  rol          String   @default("CLIENTE") // ADMIN | CLIENTE
+  rol          Rol      @default(CLIENTE)
   activo       Boolean  @default(true)
   creadoEn     DateTime @default(now())
 
@@ -58,17 +70,17 @@ model Horario {
 }
 
 model Cita {
-  id         String   @id @default(uuid())
+  id         String     @id @default(uuid())
   pacienteId String
   doctorId   String
   fecha      DateTime
-  horaInicio String   // ej. "09:00"
-  horaFin    String   // ej. "09:30"
-  estado     String   @default("CONFIRMADA") // PENDIENTE | CONFIRMADA | CANCELADA | ATENDIDA
-  creadoEn   DateTime @default(now())
+  horaInicio String     // ej. "09:00"
+  horaFin    String     // ej. "09:30"
+  estado     EstadoCita @default(CONFIRMADA)
+  creadoEn   DateTime   @default(now())
 
-  paciente   Usuario  @relation("PacienteCitas", fields: [pacienteId], references: [id], onDelete: Cascade)
-  doctor     Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  paciente   Usuario    @relation("PacienteCitas", fields: [pacienteId], references: [id], onDelete: Cascade)
+  doctor     Doctor     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 
   @@index([doctorId, fecha])
   @@index([pacienteId])
