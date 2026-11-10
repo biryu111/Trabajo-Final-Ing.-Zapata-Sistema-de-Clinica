@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { ToastContainer } from './components/ToastContainer';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 // Páginas Públicas
 import { LandingPage } from './pages/public/LandingPage';
@@ -20,28 +21,6 @@ import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminDoctoresPage } from './pages/admin/AdminDoctoresPage';
 import { AdminCitasPage } from './pages/admin/AdminCitasPage';
 import { AdminUsuariosPage } from './pages/admin/AdminUsuariosPage';
-
-// Guard para rutas autenticadas
-const ProtectedRoute: React.FC<{ children: React.ReactElement; requiredRole?: 'ADMIN' | 'CLIENTE' }> = ({
-  children,
-  requiredRole,
-}) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center font-bold text-slate-500">Cargando aplicación...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (requiredRole && user.rol !== requiredRole) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
-};
 
 export const App: React.FC = () => {
   return (

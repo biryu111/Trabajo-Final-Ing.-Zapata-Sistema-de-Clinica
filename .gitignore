@@ -8,6 +8,9 @@ dist/
 backend/dist/
 frontend/dist/
 build/
+coverage/
+backend/coverage/
+*.lcov
 *.tsbuildinfo
 
 # Logs y depuración
