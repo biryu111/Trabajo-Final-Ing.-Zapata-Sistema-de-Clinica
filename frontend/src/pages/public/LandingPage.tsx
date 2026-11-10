@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { doctorsApi } from '../../services/api';
 import { Especialidad } from '../../types';
 import { motion } from 'framer-motion';
+import medicalCareIllustration from '../../assets/illustrations/medical_care.svg';
 import {
   Calendar,
   HeartHandshake,
@@ -97,9 +98,17 @@ export const LandingPage: React.FC = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="lg:col-span-5 relative"
+              className="lg:col-span-5 relative space-y-6"
             >
-              <div className="relative mx-auto max-w-md bg-white p-6 rounded-3xl shadow-2xl border border-slate-100 space-y-6">
+              <div className="w-full max-w-sm mx-auto">
+                <img
+                  src={medicalCareIllustration}
+                  alt="Atención médica y reserva digital"
+                  className="w-full h-auto object-contain max-h-56 mx-auto drop-shadow-md"
+                />
+              </div>
+
+              <div className="relative mx-auto max-w-md bg-white p-6 rounded-3xl shadow-xl border border-slate-100 space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-2xl bg-pink-100 text-pink-600 flex items-center justify-center font-bold text-lg">
@@ -170,10 +179,28 @@ export const LandingPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.1 }}
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.08,
+                },
+              },
+            }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
             {especialidades.map((esp, idx) => (
               <motion.div
                 key={esp.id}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+                }}
                 whileHover={{ y: -6 }}
                 transition={{ duration: 0.2 }}
                 className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md shadow-slate-200/50 hover:shadow-xl hover:border-emerald-200 transition-all group flex flex-col justify-between"
@@ -209,7 +236,7 @@ export const LandingPage: React.FC = () => {
                 </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </section>
 

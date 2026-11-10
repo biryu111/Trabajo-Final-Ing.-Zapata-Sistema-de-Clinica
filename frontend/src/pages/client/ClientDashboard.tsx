@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { doctorsApi, appointmentsApi } from '../../services/api';
 import { Doctor, Especialidad, SlotDisponibilidad } from '../../types';
 import { useAuth } from '../../context/AuthContext';
@@ -194,14 +194,22 @@ export const ClientDashboard: React.FC = () => {
                   </span>
                 </div>
 
-                <button
-                  data-testid={`btn-reservar-doctor-${doc.id}`}
-                  onClick={() => setSelectedDoctor(doc)}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
-                >
-                  <CalendarIcon className="w-4 h-4 text-amber-300" />
-                  <span>Ver Horarios y Reservar</span>
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    to={`/cliente/doctor/${doc.id}`}
+                    className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center transition-colors"
+                  >
+                    Ver Perfil
+                  </Link>
+                  <button
+                    data-testid={`btn-reservar-doctor-${doc.id}`}
+                    onClick={() => setSelectedDoctor(doc)}
+                    className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <CalendarIcon className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Reservar</span>
+                  </button>
+                </div>
               </div>
             </motion.div>
           ))}

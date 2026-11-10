@@ -1,0 +1,71 @@
+<svg viewBox="0 0 500 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="gradAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+    <linearGradient id="gradRose" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F472B6"/>
+      <stop offset="100%" stop-color="#DB2777"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="15" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Background Ambient Shapes -->
+  <circle cx="250" cy="200" r="160" fill="#F0FDF4" />
+  <circle cx="360" cy="110" r="40" fill="#FEF3C7" opacity="0.6"/>
+  <circle cx="140" cy="300" r="30" fill="#FCE7F3" opacity="0.6"/>
+
+  <!-- Desk / Base Line -->
+  <rect x="80" y="320" width="340" height="8" rx="4" fill="#E2E8F0"/>
+
+  <!-- Calendar Board -->
+  <g filter="url(#softShadow)">
+    <rect x="150" y="80" width="200" height="230" rx="20" fill="#FFFFFF"/>
+    <!-- Calendar Top Bar -->
+    <path d="M150 100C150 88.9543 158.954 80 170 80H330C341.046 80 350 88.9543 350 100V130H150V100Z" fill="url(#gradEmerald)"/>
+    
+    <!-- Calendar Rings -->
+    <rect x="180" y="70" width="12" height="22" rx="6" fill="#047857"/>
+    <rect x="244" y="70" width="12" height="22" rx="6" fill="#047857"/>
+    <rect x="308" y="70" width="12" height="22" rx="6" fill="#047857"/>
+
+    <!-- Month Label & Medical Cross -->
+    <text x="250" y="112" text-anchor="middle" font-family="system-ui, sans-serif" font-weight="700" font-size="14" fill="#FFFFFF" letter-spacing="1">AGENDA MÉDICA</text>
+
+    <!-- Calendar Grid Rows -->
+    <!-- Day headers -->
+    <circle cx="180" cy="160" r="14" fill="#F1F5F9"/>
+    <circle cx="215" cy="160" r="14" fill="#F1F5F9"/>
+    <circle cx="250" cy="160" r="14" fill="#F1F5F9"/>
+    <circle cx="285" cy="160" r="14" fill="#F1F5F9"/>
+    <circle cx="320" cy="160" r="14" fill="#F1F5F9"/>
+
+    <circle cx="180" cy="200" r="14" fill="#F1F5F9"/>
+    <circle cx="215" cy="200" r="14" fill="#FEF3C7"/>
+    <circle cx="250" cy="200" r="14" fill="#F1F5F9"/>
+    <circle cx="285" cy="200" r="14" fill="#D1FAE5"/>
+    <circle cx="320" cy="200" r="14" fill="#F1F5F9"/>
+
+    <circle cx="180" cy="240" r="14" fill="#F1F5F9"/>
+    <circle cx="215" cy="240" r="14" fill="#F1F5F9"/>
+    <circle cx="250" cy="240" r="14" fill="#FCE7F3"/>
+    <circle cx="285" cy="240" r="14" fill="#F1F5F9"/>
+    <circle cx="320" cy="240" r="14" fill="#F1F5F9"/>
+
+    <!-- Stethoscope Floating Badge -->
+    <circle cx="330" cy="265" r="32" fill="url(#gradAmber)"/>
+    <path d="M322 253V264C322 268.418 325.582 272 330 272C334.418 272 338 268.418 338 264V253M319 253H325M335 253H341M330 272V277M326 277H334" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Clock floating left -->
+    <circle cx="170" cy="270" r="26" fill="url(#gradRose)"/>
+    <circle cx="170" cy="270" r="20" stroke="#FFFFFF" stroke-width="2.5" fill="none"/>
+    <path d="M170 262V270L175 273" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>

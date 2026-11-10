@@ -1,0 +1,47 @@
+<svg viewBox="0 0 500 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="nfEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="nfRose" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F43F5E"/>
+      <stop offset="100%" stop-color="#BE123C"/>
+    </linearGradient>
+    <filter id="nfShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Ambient background -->
+  <circle cx="250" cy="190" r="150" fill="#F8FAFC"/>
+  <circle cx="160" cy="110" r="45" fill="#FEF2F2" opacity="0.8"/>
+  <circle cx="340" cy="270" r="55" fill="#ECFDF5" opacity="0.8"/>
+
+  <!-- Big 404 Numbers with Medical Vibe -->
+  <g filter="url(#nfShadow)">
+    <text x="130" y="220" font-family="system-ui, sans-serif" font-weight="900" font-size="120" fill="url(#nfEmerald)">4</text>
+    
+    <!-- Central Stethoscope / Magnifying Compass representing the 0 -->
+    <circle cx="250" cy="175" r="52" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="8"/>
+    <circle cx="250" cy="175" r="38" fill="url(#nfRose)"/>
+    <!-- Medical Cross with Question Mark inside 0 -->
+    <path d="M244 175H256M250 169V181" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+
+    <text x="310" y="220" font-family="system-ui, sans-serif" font-weight="900" font-size="120" fill="url(#nfEmerald)">4</text>
+  </g>
+
+  <!-- Ground Plane -->
+  <rect x="80" y="290" width="340" height="6" rx="3" fill="#E2E8F0"/>
+
+  <!-- Floating Bandage / First Aid kit elements -->
+  <g transform="rotate(15 390 120)">
+    <rect x="370" y="105" width="40" height="18" rx="6" fill="#FDE68A"/>
+    <circle cx="390" cy="114" r="3" fill="#D97706"/>
+  </g>
+
+  <g transform="rotate(-20 100 240)">
+    <rect x="85" y="230" width="36" height="16" rx="5" fill="#BBF7D0"/>
+    <circle cx="103" cy="238" r="3" fill="#16A34A"/>
+  </g>
+</svg>

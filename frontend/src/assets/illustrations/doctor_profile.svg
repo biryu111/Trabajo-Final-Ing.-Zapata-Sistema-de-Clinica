@@ -1,0 +1,46 @@
+<svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="docBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10B981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="coatGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F1F5F9"/>
+    </linearGradient>
+    <filter id="docShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0F172A" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Ambient Circle -->
+  <circle cx="200" cy="200" r="160" fill="#ECFDF5"/>
+
+  <!-- Doctor Silhouette / Illustration -->
+  <g filter="url(#docShadow)">
+    <!-- Base / Torso / Medical Coat -->
+    <path d="M120 340C120 270 150 250 200 250C250 250 280 270 280 340Z" fill="url(#coatGrad)"/>
+    <!-- Inner Shirt -->
+    <path d="M175 250H225L200 290L175 250Z" fill="#10B981"/>
+    <!-- Stethoscope around neck -->
+    <path d="M170 250C170 280 185 305 200 305C215 305 230 280 230 250" stroke="#047857" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <circle cx="200" cy="312" r="8" fill="#F59E0B"/>
+
+    <!-- Head / Neck -->
+    <rect x="188" y="220" width="24" height="35" rx="8" fill="#FCD34D"/>
+    <!-- Face -->
+    <circle cx="200" cy="180" r="45" fill="#FDE68A"/>
+    <!-- Hair -->
+    <path d="M155 175C155 135 175 130 200 130C225 130 245 135 245 175C240 155 220 148 200 148C180 148 160 155 155 175Z" fill="#1E293B"/>
+
+    <!-- Gentle Friendly Smile -->
+    <path d="M192 195C195 200 205 200 208 195" stroke="#78350F" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- Eyes -->
+    <circle cx="188" cy="178" r="3.5" fill="#1E293B"/>
+    <circle cx="212" cy="178" r="3.5" fill="#1E293B"/>
+
+    <!-- Medical Head Mirror / Cross -->
+    <circle cx="200" cy="130" r="12" fill="url(#docBg)"/>
+    <path d="M196 130H204M200 126V134" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>

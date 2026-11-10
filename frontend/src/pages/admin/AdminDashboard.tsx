@@ -3,6 +3,7 @@ import { adminApi } from '../../services/api';
 import { MetricasAdmin } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   BarChart,
   Bar,
@@ -80,9 +81,26 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Tarjetas de Métricas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md flex items-center gap-4">
+      {/* Tarjetas de Métricas con Stagger */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: { opacity: 0 },
+          visible: {
+            opacity: 1,
+            transition: { staggerChildren: 0.08 },
+          },
+        }}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 15 },
+            visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+          }}
+          className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md flex items-center gap-4"
+        >
           <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
             <Calendar className="w-7 h-7" />
           </div>
@@ -90,9 +108,15 @@ export const AdminDashboard: React.FC = () => {
             <span className="text-2xl font-black text-slate-900 block">{metricas?.citasHoy || 0}</span>
             <span className="text-xs font-semibold text-slate-500">Citas Programadas Hoy</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md flex items-center gap-4">
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 15 },
+            visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+          }}
+          className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md flex items-center gap-4"
+        >
           <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold">
             <Stethoscope className="w-7 h-7" />
           </div>
@@ -100,9 +124,15 @@ export const AdminDashboard: React.FC = () => {
             <span className="text-2xl font-black text-slate-900 block">{metricas?.doctoresActivos || 0}</span>
             <span className="text-xs font-semibold text-slate-500">Doctores Activos</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md flex items-center gap-4">
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 15 },
+            visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+          }}
+          className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md flex items-center gap-4"
+        >
           <div className="w-14 h-14 rounded-2xl bg-pink-100 text-pink-600 flex items-center justify-center font-bold">
             <Users className="w-7 h-7" />
           </div>
@@ -110,9 +140,15 @@ export const AdminDashboard: React.FC = () => {
             <span className="text-2xl font-black text-slate-900 block">{metricas?.clientesRegistrados || 0}</span>
             <span className="text-xs font-semibold text-slate-500">Pacientes Registrados</span>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md flex items-center gap-4">
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 15 },
+            visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+          }}
+          className="bg-white p-6 rounded-3xl border border-slate-100 shadow-md flex items-center gap-4"
+        >
           <div className="w-14 h-14 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
             <Activity className="w-7 h-7" />
           </div>
@@ -120,8 +156,8 @@ export const AdminDashboard: React.FC = () => {
             <span className="text-2xl font-black text-slate-900 block">{metricas?.totalCitas || 0}</span>
             <span className="text-xs font-semibold text-slate-500">Total Histórico Citas</span>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Gráficos Recharts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

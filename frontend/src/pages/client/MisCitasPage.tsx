@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { appointmentsApi } from '../../services/api';
 import { Cita, EstadoCita } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { StatusBadge } from '../../components/StatusBadge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Clock, Stethoscope, AlertTriangle, X, Loader2, CheckCircle } from 'lucide-react';
+import emptyAppointmentsIllustration from '../../assets/illustrations/empty_appointments.svg';
 
 export const MisCitasPage: React.FC = () => {
   const { showToast } = useAuth();
@@ -83,10 +85,27 @@ export const MisCitasPage: React.FC = () => {
           ))}
         </div>
       ) : citasFiltradas.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl text-center border border-slate-200 space-y-3">
-          <Calendar className="w-12 h-12 text-slate-400 mx-auto" />
-          <h3 className="font-bold text-slate-700 text-lg">No hay citas registradas</h3>
-          <p className="text-xs text-slate-500">No posees citas en este estado actualmente.</p>
+        <div className="bg-white p-10 rounded-3xl text-center border border-slate-100 shadow-sm space-y-4 max-w-md mx-auto">
+          <div className="w-52 h-40 mx-auto">
+            <img
+              src={emptyAppointmentsIllustration}
+              alt="No hay citas registradas"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-bold text-slate-800 text-lg">No hay citas registradas</h3>
+            <p className="text-xs text-slate-500 max-w-xs mx-auto">
+              No posees citas en este estado actualmente. Explora los médicos disponibles y reserva tu horario.
+            </p>
+          </div>
+          <Link
+            to="/cliente/dashboard"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all"
+          >
+            <Calendar className="w-4 h-4" />
+            <span>Agendar Nueva Cita</span>
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">
