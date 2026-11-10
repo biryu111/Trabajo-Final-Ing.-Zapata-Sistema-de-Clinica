@@ -116,6 +116,7 @@ export const AdminDoctoresPage: React.FC = () => {
           </button>
 
           <button
+            data-testid="btn-nuevo-doctor"
             onClick={() => setShowDoctorModal(true)}
             className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/25 flex items-center gap-1.5"
           >
@@ -141,13 +142,13 @@ export const AdminDoctoresPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {doctores.map((doc) => (
-                <tr key={doc.id} className="hover:bg-slate-50/50 transition-colors">
+                <tr key={doc.id} data-testid={`row-doctor-${doc.id}`} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4 font-bold text-slate-900 flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center font-bold text-sm">
                       <Stethoscope className="w-5 h-5" />
                     </div>
                     <div>
-                      <span>{doc.nombre}</span>
+                      <span data-testid={`doctor-nombre-${doc.id}`}>{doc.nombre}</span>
                       <p className="text-[11px] text-slate-400 font-normal line-clamp-1">{doc.biografia || 'Sin biografía'}</p>
                     </div>
                   </td>
@@ -174,6 +175,7 @@ export const AdminDoctoresPage: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button
+                      data-testid={`btn-desactivar-doctor-${doc.id}`}
                       onClick={() => handleDeleteDoctor(doc.id)}
                       className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                       title="Desactivar Doctor"
@@ -209,6 +211,7 @@ export const AdminDoctoresPage: React.FC = () => {
                   <input
                     type="text"
                     required
+                    data-testid="input-doctor-nombre"
                     value={nombreDoc}
                     onChange={(e) => setNombreDoc(e.target.value)}
                     placeholder="Ej. Dr. Andrés Caso"
@@ -219,6 +222,7 @@ export const AdminDoctoresPage: React.FC = () => {
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Especialidad</label>
                   <select
+                    data-testid="select-doctor-especialidad"
                     value={especialidadIdDoc}
                     onChange={(e) => setEspecialidadIdDoc(e.target.value)}
                     className="w-full px-4 py-2.5 border rounded-xl text-sm"
@@ -232,6 +236,7 @@ export const AdminDoctoresPage: React.FC = () => {
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Biografía</label>
                   <textarea
+                    data-testid="input-doctor-bio"
                     value={biografiaDoc}
                     onChange={(e) => setBiografiaDoc(e.target.value)}
                     rows={3}
@@ -241,7 +246,12 @@ export const AdminDoctoresPage: React.FC = () => {
 
                 <div className="flex justify-end gap-3 pt-2">
                   <button type="button" onClick={() => setShowDoctorModal(false)} className="px-4 py-2 border rounded-xl text-xs font-semibold">Cancelar</button>
-                  <button type="submit" disabled={savingDoc} className="px-5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-md">
+                  <button
+                    type="submit"
+                    data-testid="btn-guardar-doctor"
+                    disabled={savingDoc}
+                    className="px-5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-md"
+                  >
                     {savingDoc ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Guardar Doctor'}
                   </button>
                 </div>

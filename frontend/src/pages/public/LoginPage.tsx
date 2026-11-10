@@ -58,6 +58,7 @@ export const LoginPage: React.FC = () => {
               <input
                 type="email"
                 required
+                data-testid="input-email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ejemplo@correo.com"
@@ -75,6 +76,7 @@ export const LoginPage: React.FC = () => {
               <input
                 type="password"
                 required
+                data-testid="input-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -86,6 +88,7 @@ export const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={submitting}
+            data-testid="btn-login-submit"
             className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-75"
           >
             {submitting ? (

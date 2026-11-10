@@ -131,6 +131,7 @@ export const ClientDashboard: React.FC = () => {
         {especialidades.map((esp) => (
           <button
             key={esp.id}
+            data-testid={`btn-filtro-esp-${esp.id}`}
             onClick={() => setSelectedEspecialidad(esp.id)}
             className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all ${
               selectedEspecialidad === esp.id
@@ -161,6 +162,7 @@ export const ClientDashboard: React.FC = () => {
           {doctores.map((doc) => (
             <motion.div
               key={doc.id}
+              data-testid={`card-doctor-${doc.id}`}
               whileHover={{ y: -4 }}
               className="bg-white rounded-3xl border border-slate-100 shadow-md hover:shadow-xl p-6 space-y-5 flex flex-col justify-between transition-all"
             >
@@ -193,6 +195,7 @@ export const ClientDashboard: React.FC = () => {
                 </div>
 
                 <button
+                  data-testid={`btn-reservar-doctor-${doc.id}`}
                   onClick={() => setSelectedDoctor(doc)}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-xs shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center gap-2"
                 >
@@ -221,6 +224,7 @@ export const ClientDashboard: React.FC = () => {
                   <p className="text-xs text-slate-500 font-medium">{selectedDoctor.nombre} - {selectedDoctor.especialidad.nombre}</p>
                 </div>
                 <button
+                  data-testid="btn-cerrar-modal"
                   onClick={() => setSelectedDoctor(null)}
                   className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100"
                 >
@@ -235,6 +239,7 @@ export const ClientDashboard: React.FC = () => {
                 </label>
                 <input
                   type="date"
+                  data-testid="input-fecha-cita"
                   min={new Date().toISOString().split('T')[0]}
                   value={selectedFecha}
                   onChange={(e) => setSelectedFecha(e.target.value)}
@@ -266,6 +271,7 @@ export const ClientDashboard: React.FC = () => {
                     {slots.map((slot) => (
                       <button
                         key={slot.horaInicio}
+                        data-testid={`btn-slot-${slot.horaInicio}`}
                         disabled={!slot.disponible}
                         onClick={() => setSelectedSlot(slot)}
                         className={`py-2.5 px-3 rounded-xl text-xs font-bold border transition-all ${
@@ -303,6 +309,7 @@ export const ClientDashboard: React.FC = () => {
                     Cancelar
                   </button>
                   <button
+                    data-testid="btn-confirmar-cita"
                     disabled={!selectedSlot || booking}
                     onClick={handleBook}
                     className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-500/25 disabled:opacity-50 flex items-center gap-2"

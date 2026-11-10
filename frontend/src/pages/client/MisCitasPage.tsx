@@ -101,6 +101,7 @@ export const MisCitasPage: React.FC = () => {
             return (
               <motion.div
                 key={cita.id}
+                data-testid={`card-cita-${cita.id}`}
                 layout
                 className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
               >
@@ -111,7 +112,9 @@ export const MisCitasPage: React.FC = () => {
                   <div className="space-y-1">
                     <div className="flex items-center gap-3">
                       <h3 className="font-extrabold text-slate-900 text-base">{cita.doctor.nombre}</h3>
-                      <StatusBadge estado={cita.estado} />
+                      <div data-testid="badge-estado-cita">
+                        <StatusBadge estado={cita.estado} />
+                      </div>
                     </div>
                     <p className="text-xs font-semibold text-emerald-600">
                       {cita.doctor.especialidad.nombre}
@@ -133,6 +136,7 @@ export const MisCitasPage: React.FC = () => {
                 {cita.estado !== 'CANCELADA' && cita.estado !== 'ATENDIDA' && (
                   <div className="flex items-center gap-2 self-end md:self-center">
                     <button
+                      data-testid={`btn-cancelar-cita-${cita.id}`}
                       onClick={() => setCancelingCita(cita)}
                       className="px-4 py-2 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
                     >
@@ -180,6 +184,7 @@ export const MisCitasPage: React.FC = () => {
                   Volver
                 </button>
                 <button
+                  data-testid="btn-confirmar-cancelar"
                   disabled={submittingCancel}
                   onClick={handleConfirmCancel}
                   className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-500/20 flex items-center gap-2"

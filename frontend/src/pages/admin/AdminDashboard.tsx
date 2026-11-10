@@ -60,7 +60,7 @@ export const AdminDashboard: React.FC = () => {
             <Shield className="w-3.5 h-3.5 text-amber-600" />
             PANEL ADMINISTRATIVO
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard General</h1>
+          <h1 data-testid="admin-dashboard-title" className="text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard General</h1>
           <p className="text-xs text-slate-500">Métricas globales de atención médica y demanda de pacientes</p>
         </div>
 
