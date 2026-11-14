@@ -11,7 +11,8 @@ interface Toast {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (data: any) => Promise<void>;
+  login: (data: any) => Promise<{ requires2FA?: boolean; challengeToken?: string } | void>;
+  verify2Fa: (params: { challengeToken: string; code?: string; recoveryCode?: string }) => Promise<User>;
   register: (data: any) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
@@ -54,14 +55,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (data: any) => {
     try {
-      const res: AuthResponse = await authApi.login(data);
+      const res: any = await authApi.login(data);
+      if (res.requires2FA) {
+        return { requires2FA: true, challengeToken: res.challengeToken };
+      }
       localStorage.setItem('accessToken', res.accessToken);
       localStorage.setItem('refreshToken', res.refreshToken);
       localStorage.setItem('user', JSON.stringify(res.user));
       setUser(res.user);
       showToast(`¡Bienvenido de nuevo, ${res.user.nombre}!`, 'success');
+      return;
     } catch (err: any) {
-      const errorMsg = err.response?.data?.error?.message || 'Error al iniciar sesión';
+      const errorMsg =
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        'Error al iniciar sesión';
+      showToast(Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg, 'error');
+      throw err;
+    }
+  };
+
+  const verify2Fa = async (params: {
+    challengeToken: string;
+    code?: string;
+    recoveryCode?: string;
+  }): Promise<User> => {
+    try {
+      const res = await authApi.verify2Fa(params);
+      localStorage.setItem('accessToken', res.accessToken);
+      localStorage.setItem('refreshToken', res.refreshToken);
+      localStorage.setItem('user', JSON.stringify(res.user));
+      setUser(res.user);
+      showToast(`¡Bienvenido de nuevo, ${res.user.nombre}!`, 'success');
+      return res.user;
+    } catch (err: any) {
+      const errorMsg =
+        err.response?.data?.error?.message ||
+        err.response?.data?.message ||
+        'Error al verificar el código de seguridad';
       showToast(Array.isArray(errorMsg) ? errorMsg.join(', ') : errorMsg, 'error');
       throw err;
     }
@@ -104,6 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         loading,
         login,
+        verify2Fa,
         register,
         logout,
         updateUser,

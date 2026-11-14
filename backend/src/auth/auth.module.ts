@@ -4,6 +4,8 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { TurnstileGuard } from '../common/guards/turnstile.guard';
+import { RequireMfaGuard } from '../common/guards/require-mfa.guard';
 
 @Module({
   imports: [
@@ -13,7 +15,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard, RolesGuard],
-  exports: [AuthService, JwtModule, AuthGuard, RolesGuard],
+  providers: [AuthService, AuthGuard, RolesGuard, TurnstileGuard, RequireMfaGuard],
+  exports: [AuthService, JwtModule, AuthGuard, RolesGuard, TurnstileGuard, RequireMfaGuard],
 })
 export class AuthModule {}

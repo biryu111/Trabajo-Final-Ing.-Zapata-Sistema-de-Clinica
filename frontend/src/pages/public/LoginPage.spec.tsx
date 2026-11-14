@@ -76,4 +76,66 @@ describe('LoginPage (Form Component Test)', () => {
       ).toBeInTheDocument();
     });
   });
+
+  it('muestra la cuenta regresiva y el banner de cuenta bloqueada cuando el backend responde con 423', async () => {
+    const lockoutResponse = {
+      response: {
+        status: 423,
+        data: {
+          error: {
+            statusCode: 423,
+            code: 'CUENTA_BLOQUEADA',
+            message: 'Cuenta bloqueada temporalmente por intentos fallidos.',
+            permanente: false,
+            retryAfterSeconds: 300,
+          },
+        },
+      },
+    };
+
+    vi.mocked(authApi.login).mockRejectedValueOnce(lockoutResponse);
+
+    renderComponent();
+
+    const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+    const passwordInput = screen.getByPlaceholderText('••••••••');
+    const submitButton = screen.getByRole('button', {
+      name: /ingresar a la plataforma/i,
+    });
+
+    fireEvent.change(emailInput, { target: { value: 'bloqueado@clinica.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123!' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('banner-cuenta-bloqueada')).toBeInTheDocument();
+      expect(screen.getByTestId('countdown-timer')).toBeInTheDocument();
+      expect(screen.getByText(/05:00/)).toBeInTheDocument();
+    });
+  });
+
+  it('muestra el segundo paso de verificación 2FA cuando el backend responde requires2FA', async () => {
+    vi.mocked(authApi.login).mockResolvedValueOnce({
+      requires2FA: true,
+      challengeToken: 'mock-challenge-token',
+    } as any);
+
+    renderComponent();
+
+    const emailInput = screen.getByPlaceholderText('ejemplo@correo.com');
+    const passwordInput = screen.getByPlaceholderText('••••••••');
+    const submitButton = screen.getByRole('button', {
+      name: /ingresar a la plataforma/i,
+    });
+
+    fireEvent.change(emailInput, { target: { value: 'user2fa@clinica.com' } });
+    fireEvent.change(passwordInput, { target: { value: 'Password123!' } });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Verificación de Seguridad \(2FA\)/i)).toBeInTheDocument();
+      expect(screen.getByTestId('input-totp')).toBeInTheDocument();
+      expect(screen.getByTestId('btn-verify-2fa')).toBeInTheDocument();
+    });
+  });
 });

@@ -1,9 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+    private readonly auditService: AuditService,
+  ) {}
 
   async getDashboardMetrics() {
     const hoyStr = new Date().toISOString().split('T')[0];
@@ -106,10 +112,25 @@ export class AdminService {
     const usuario = await this.prisma.usuario.findUnique({ where: { id: userId } });
     if (!usuario) throw new NotFoundException('Usuario no encontrado');
 
+    const nuevoEstado = !usuario.activo;
+
     const actualizado = await this.prisma.usuario.update({
       where: { id: userId },
-      data: { activo: !usuario.activo },
-      select: { id: true, nombre: true, email: true, activo: true },
+      data: {
+        activo: nuevoEstado,
+        tokenVersion: { increment: 1 }, // Revocación inmediata de tokens activos
+      },
+      select: { id: true, nombre: true, email: true, activo: true, tokenVersion: true },
+    });
+
+    // Invalidar caché Redis
+    await this.redisService.del(`usuario:auth:${userId}`);
+
+    await this.auditService.log({
+      accion: nuevoEstado ? 'USUARIO_ACTIVADO' : 'USUARIO_DESACTIVADO',
+      entidad: 'Usuario',
+      entidadId: userId,
+      detalle: { anterior: usuario.activo, nuevo: nuevoEstado },
     });
 
     return actualizado;

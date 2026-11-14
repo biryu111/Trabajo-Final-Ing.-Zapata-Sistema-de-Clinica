@@ -20,18 +20,58 @@ enum EstadoCita {
 }
 
 model Usuario {
-  id           String   @id @default(uuid())
-  nombre       String
-  email        String   @unique
-  passwordHash String
-  telefono     String?
-  rol          Rol      @default(CLIENTE)
-  activo       Boolean  @default(true)
-  creadoEn     DateTime @default(now())
+  id                  String         @id @default(uuid())
+  nombre              String
+  email               String         @unique
+  passwordHash        String
+  telefono            String?
+  rol                 Rol            @default(CLIENTE)
+  activo              Boolean        @default(true)
+  creadoEn            DateTime       @default(now())
+
+  // Campos de Seguridad Fase 1 (Extra/09)
+  failedAttempts      Int            @default(0)
+  lockStage           Int            @default(0) // 0 (normal), 1 (7min), 2 (5h)
+  lockedUntil         DateTime?
+  permanentlyLocked   Boolean        @default(false)
+  tokenVersion        Int            @default(0)
+  twoFactorEnabled    Boolean        @default(false)
+  twoFactorSecretEnc  String?
+  twoFactorLastStep   Int?
+  emailVerificadoEn   DateTime?
+  eliminadoEn         DateTime?
 
   // Relaciones
-  citas        Cita[]   @relation("PacienteCitas")
-  doctorPerfil Doctor?  @relation("UsuarioDoctor")
+  citas               Cita[]         @relation("PacienteCitas")
+  doctorPerfil        Doctor?        @relation("UsuarioDoctor")
+  recoveryCodes       RecoveryCode[]
+}
+
+model RecoveryCode {
+  id        String    @id @default(uuid())
+  usuarioId String
+  codeHash  String
+  usadoEn   DateTime?
+  creadoEn  DateTime  @default(now())
+
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  accion    String
+  entidad   String?
+  entidadId String?
+  detalle   Json?
+  ip        String?
+  creadoEn  DateTime @default(now())
+
+  @@index([creadoEn])
+  @@index([actorId])
+  @@index([accion])
 }
 
 model Especialidad {
@@ -62,9 +102,9 @@ model Doctor {
 model Horario {
   id         String   @id @default(uuid())
   doctorId   String
-  diaSemana  Int      // 1=Lunes, 2=Martes, ..., 7=Domingo
-  horaInicio String   // ej. "09:00"
-  horaFin    String   // ej. "17:00"
+  diaSemana  Int
+  horaInicio String
+  horaFin    String
 
   doctor     Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
 }
@@ -74,8 +114,8 @@ model Cita {
   pacienteId String
   doctorId   String
   fecha      DateTime
-  horaInicio String     // ej. "09:00"
-  horaFin    String     // ej. "09:30"
+  horaInicio String
+  horaFin    String
   estado     EstadoCita @default(CONFIRMADA)
   creadoEn   DateTime   @default(now())
 

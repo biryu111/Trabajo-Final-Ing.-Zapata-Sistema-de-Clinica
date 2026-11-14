@@ -92,3 +92,36 @@ El repositorio cuenta con un pipeline automatizado en **GitHub Actions** (`.gith
 1. **Job `backend`:** Levanta contenedores aislados de Postgres 16 y Redis 7 con healthchecks, compila TypeScript, ejecuta migraciones de Prisma y corre la suite completa de pruebas unitarias e integración.
 2. **Job `frontend`:** Instala dependencias, ejecuta pruebas unitarias con Vitest y valida la compilación estricta con Vite y TypeScript.
 3. **Job `e2e`:** Levanta el servidor local de desarrollo y ejecuta todas las suites E2E de Playwright sobre Chromium.
+
+---
+
+## 🔒 Arquitectura de Seguridad y Autenticación Avanzada (Fase 1)
+
+### 1. Bloqueo de Login Escalonado
+Para mitigar ataques de fuerza bruta y credential stuffing con persistencia atómica en PostgreSQL:
+
+| Etapa | Intentos permitidos | Si todos fallan |
+|---|---|---|
+| **0 (normal)** | 10 intentos | Bloqueo de **7 minutos** → pasa a etapa 1 |
+| **1** | 3 intentos | Bloqueo de **5 horas** → pasa a etapa 2 |
+| **2 (último)** | 1 intento | **Bloqueo permanente**: solo un ADMIN puede liberar la cuenta |
+
+- Un login exitoso reinicia inmediatamente `failedAttempts`, `lockStage` y `lockedUntil`.
+- Al estar bloqueada la cuenta, el backend responde HTTP `423 Locked` con código `CUENTA_BLOQUEADA` y el tiempo de espera en segundos (`retryAfterSeconds`), sin evaluar la contraseña.
+- El frontend renderiza un banner visual con cuenta regresiva en tiempo real.
+
+### 2. Autenticación de Dos Factores (TOTP 2FA)
+- Basado en RFC 6238 / NIST SP 800-63B mediante tokens TOTP de 6 dígitos con ventana de tolerancia de ±1 paso (30s) y anti-reutilización de códigos (`twoFactorLastStep`).
+- Cifrado simétrico AES-256-GCM con vector de inicialización único por registro para almacenar secretos TOTP en reposo (`twoFactorSecretEnc`).
+- Generación de **8 códigos de recuperación de un solo uso** hasheados con bcrypt para acceso de emergencia.
+- **Obligatoriedad:** `RequireMfaGuard` bloquea endpoints `/admin/*` con HTTP `403 DOBLE_FACTOR_REQUERIDO` si una cuenta administradora no tiene 2FA activo.
+
+### 3. Verificación de Humanidad (Cloudflare Turnstile)
+- Protección contra bots y scripts automatizados en `/auth/register` y `/auth/login` sin fricción CAPTCHA invasiva.
+
+### 4. Autorización Siempre Fresca e Invalidación Instantánea
+- Payload JWT incluye `tokenVersion`.
+- Verificación en `AuthGuard` respaldada por caché Redis (TTL 60s) y PostgreSQL: cambios de rol, bloqueos o reseteo de credenciales incrementan `tokenVersion` y revocan sesiones activas en menos de 60 segundos.
+
+### 5. Limitación Conocida y Mitigación Futura
+- **Almacenamiento de tokens en Frontend:** En la arquitectura actual los tokens residen en `localStorage`. Como mitigación planificada para futuras versiones, los tokens de refresco migrarán a cookies `httpOnly; SameSite=Strict; Secure` para blindaje total contra vectores XSS.

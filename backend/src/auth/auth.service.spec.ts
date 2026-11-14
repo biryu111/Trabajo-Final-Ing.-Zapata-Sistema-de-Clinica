@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
+import { AuditService } from '../audit/audit.service';
 import { JwtService } from '@nestjs/jwt';
 import { BadRequestException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -13,12 +14,21 @@ describe('AuthService (Unit Tests)', () => {
   let prisma: any;
   let jwtService: any;
   let redisService: any;
+  let auditService: any;
 
   const mockPrismaService = {
     usuario: {
       findUnique: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
     },
+    recoveryCode: {
+      deleteMany: jest.fn(),
+      createMany: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+    },
+    $transaction: jest.fn((actions) => Promise.all(actions)),
   };
 
   const mockJwtService = {
@@ -32,6 +42,10 @@ describe('AuthService (Unit Tests)', () => {
     del: jest.fn(),
   };
 
+  const mockAuditService = {
+    log: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -41,6 +55,7 @@ describe('AuthService (Unit Tests)', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: JwtService, useValue: mockJwtService },
         { provide: RedisService, useValue: mockRedisService },
+        { provide: AuditService, useValue: mockAuditService },
       ],
     }).compile();
 
@@ -48,6 +63,7 @@ describe('AuthService (Unit Tests)', () => {
     prisma = module.get(PrismaService);
     jwtService = module.get(JwtService);
     redisService = module.get(RedisService);
+    auditService = module.get(AuditService);
   });
 
   it('should be defined', () => {
@@ -104,6 +120,7 @@ describe('AuthService (Unit Tests)', () => {
           telefono: registerDto.telefono,
           rol: 'CLIENTE',
           activo: true,
+          tokenVersion: 0,
         },
         select: expect.any(Object),
       });
@@ -125,9 +142,7 @@ describe('AuthService (Unit Tests)', () => {
       prisma.usuario.findUnique.mockResolvedValue(null);
 
       await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
-      await expect(service.login(loginDto)).rejects.toThrow(
-        'Credenciales inválidas o cuenta desactivada',
-      );
+      await expect(service.login(loginDto)).rejects.toThrow('Credenciales inválidas');
     });
 
     it('debe lanzar UnauthorizedException si el usuario está inactivo (activo: false)', async () => {
@@ -149,6 +164,11 @@ describe('AuthService (Unit Tests)', () => {
         email: 'juan@example.com',
         passwordHash: 'hashed_pw',
         activo: true,
+      });
+      prisma.usuario.update.mockResolvedValue({
+        id: 'u1',
+        failedAttempts: 1,
+        lockStage: 0,
       });
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
@@ -172,7 +192,7 @@ describe('AuthService (Unit Tests)', () => {
         .mockResolvedValueOnce('mock_access_token')
         .mockResolvedValueOnce('mock_refresh_token');
 
-      const result = await service.login(loginDto);
+      const result: any = await service.login(loginDto);
 
       expect(result.user).not.toHaveProperty('passwordHash');
       expect(result.user.email).toBe('juan@example.com');
@@ -191,16 +211,17 @@ describe('AuthService (Unit Tests)', () => {
         'user-123',
         'test@clinica.com',
         'ADMIN',
+        0,
       );
 
       expect(jwtService.signAsync).toHaveBeenNthCalledWith(
         1,
-        { sub: 'user-123', email: 'test@clinica.com', rol: 'ADMIN' },
+        { sub: 'user-123', email: 'test@clinica.com', rol: 'ADMIN', tokenVersion: 0 },
         expect.objectContaining({ expiresIn: expect.any(String) }),
       );
       expect(jwtService.signAsync).toHaveBeenNthCalledWith(
         2,
-        { sub: 'user-123', email: 'test@clinica.com', rol: 'ADMIN' },
+        { sub: 'user-123', email: 'test@clinica.com', rol: 'ADMIN', tokenVersion: 0 },
         expect.objectContaining({ expiresIn: expect.any(String) }),
       );
       expect(tokens).toEqual({ accessToken: 'token_1', refreshToken: 'token_2' });

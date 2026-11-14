@@ -28,10 +28,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor para manejo de refresco automático de token
+// Interceptor para manejo de refresco automático de token y desvíos de seguridad
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Si el usuario es ADMIN y no tiene 2FA activo, redirige a la configuración obligatoria
+    if (
+      error.response?.status === 403 &&
+      (error.response?.data?.code === 'DOBLE_FACTOR_REQUERIDO' ||
+        error.response?.data?.error?.code === 'DOBLE_FACTOR_REQUERIDO')
+    ) {
+      if (!window.location.pathname.startsWith('/seguridad/2fa')) {
+        window.location.href = '/seguridad/2fa?mfaRequired=true';
+      }
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config;
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -61,7 +73,19 @@ api.interceptors.response.use(
 // Servidor de API encapsulado
 export const authApi = {
   register: (data: any) => api.post<AuthResponse>('/auth/register', data).then((res) => res.data),
-  login: (data: any) => api.post<AuthResponse>('/auth/login', data).then((res) => res.data),
+  login: (data: any) => api.post<any>('/auth/login', data).then((res) => res.data),
+  verify2Fa: (data: { challengeToken: string; code?: string; recoveryCode?: string }) =>
+    api.post<AuthResponse>('/auth/2fa/verify', data).then((res) => res.data),
+  setup2Fa: () =>
+    api.post<{ secret: string; otpauthUrl: string; qrCode: string }>('/auth/2fa/setup').then((res) => res.data),
+  enable2Fa: (code: string) =>
+    api.post<{ message: string; recoveryCodes: string[] }>('/auth/2fa/enable', { code }).then((res) => res.data),
+  disable2Fa: (password: string, code: string) =>
+    api.post<{ message: string }>('/auth/2fa/disable', { password, code }).then((res) => res.data),
+  regenerateRecoveryCodes: (password: string, code: string) =>
+    api
+      .post<{ message: string; recoveryCodes: string[] }>('/auth/2fa/recovery-codes/regenerate', { password, code })
+      .then((res) => res.data),
   logout: () => {
     const refreshToken = localStorage.getItem('refreshToken');
     return api.post('/auth/logout', { refreshToken }).then(() => {

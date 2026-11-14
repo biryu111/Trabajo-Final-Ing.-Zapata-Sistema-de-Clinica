@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { motion } from 'framer-motion';
 import { User, Mail, Lock, Phone, ArrowRight, Loader2, HeartHandshake, Sparkles, ShieldCheck } from 'lucide-react';
 import medicalCareIllustration from '../../assets/illustrations/medical_care.svg';
+import { TurnstileWidget } from '../../components/TurnstileWidget';
 
 export const RegisterPage: React.FC = () => {
   const { register } = useAuth();
@@ -13,6 +14,7 @@ export const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [telefono, setTelefono] = useState('');
   const [password, setPassword] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -21,7 +23,7 @@ export const RegisterPage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      await register({ nombre, email, telefono, password });
+      await register({ nombre, email, telefono, password, turnstileToken });
       navigate('/cliente/dashboard');
     } catch {
       // Manejado en toast
@@ -118,6 +120,9 @@ export const RegisterPage: React.FC = () => {
                 />
               </div>
             </div>
+
+            {/* Cloudflare Turnstile */}
+            <TurnstileWidget onToken={(token) => setTurnstileToken(token)} />
 
             <button
               type="submit"

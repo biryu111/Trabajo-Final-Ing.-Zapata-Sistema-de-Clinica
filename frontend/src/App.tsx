@@ -18,6 +18,7 @@ import { ClientDashboard } from './pages/client/ClientDashboard';
 import { MisCitasPage } from './pages/client/MisCitasPage';
 import { PerfilPage } from './pages/client/PerfilPage';
 import { DoctorDetailPage } from './pages/client/DoctorDetailPage';
+import { TwoFactorSetupPage } from './pages/client/TwoFactorSetupPage';
 
 // Páginas Admin
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -74,6 +75,14 @@ const AnimatedRoutes: React.FC = () => {
             element={
               <ProtectedRoute>
                 <PerfilPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/seguridad/2fa"
+            element={
+              <ProtectedRoute>
+                <TwoFactorSetupPage />
               </ProtectedRoute>
             }
           />

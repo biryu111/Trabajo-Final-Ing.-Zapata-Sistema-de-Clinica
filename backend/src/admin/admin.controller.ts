@@ -12,11 +12,12 @@ import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from '@nestjs/swagger'
 import { AdminService } from './admin.service';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { RequireMfaGuard } from '../common/guards/require-mfa.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 
 @ApiTags('Admin')
 @ApiBearerAuth()
-@UseGuards(AuthGuard, RolesGuard)
+@UseGuards(AuthGuard, RolesGuard, RequireMfaGuard)
 @Roles('ADMIN')
 @Controller('admin')
 export class AdminController {

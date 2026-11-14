@@ -39,6 +39,11 @@ jobs:
       REDIS_URL: redis://localhost:6379
       JWT_SECRET: ci-test-secret
       JWT_REFRESH_SECRET: ci-test-refresh-secret
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:3000"
+      TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA"
+      TOTP_ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      TOTP_ISSUER: "Clinica Demo UNSCH"
+      REQUIRE_EMAIL_VERIFICATION: "false"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

@@ -1,9 +1,11 @@
-import { Controller, Get, Patch, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Body, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Request } from 'express';
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './users.dto';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { GetUser } from '../common/decorators/get-user.decorator';
+import { getClientIp } from '../common/utils/ip.util';
 
 @ApiTags('Usuarios')
 @ApiBearerAuth()
@@ -23,7 +25,9 @@ export class UsersController {
   async updateProfile(
     @GetUser('id') userId: string,
     @Body() dto: UpdateProfileDto,
+    @Req() req: Request,
   ) {
-    return this.usersService.updateProfile(userId, dto);
+    const ip = getClientIp(req);
+    return this.usersService.updateProfile(userId, dto, ip);
   }
 }

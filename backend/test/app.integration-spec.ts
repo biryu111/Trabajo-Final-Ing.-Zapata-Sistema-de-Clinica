@@ -17,6 +17,7 @@ describe('Backend Integration Tests (Supertest API)', () => {
     especialidades: [] as any[],
     doctores: [] as any[],
     citas: [] as any[],
+    recoveryCodes: [] as any[],
     cache: new Map<string, string>(),
   };
 
@@ -42,13 +43,73 @@ describe('Backend Integration Tests (Supertest API)', () => {
           telefono: data.telefono,
           rol: data.rol || 'CLIENTE',
           activo: data.activo !== undefined ? data.activo : true,
+          tokenVersion: data.tokenVersion || 0,
+          failedAttempts: 0,
+          lockStage: 0,
+          lockedUntil: null,
+          permanentlyLocked: false,
+          twoFactorEnabled: false,
+          twoFactorSecretEnc: null,
+          twoFactorLastStep: null,
+          eliminadoEn: null,
           creadoEn: new Date(),
         };
         memoryStore.usuarios.push(newUser);
         return newUser;
       }),
+      update: jest.fn(async ({ where, data }: any) => {
+        const u = memoryStore.usuarios.find(
+          (user) => (where.id && user.id === where.id) || (where.email && user.email === where.email),
+        );
+        if (u) {
+          if (data.tokenVersion?.increment) {
+            u.tokenVersion = (u.tokenVersion || 0) + data.tokenVersion.increment;
+          } else if (typeof data.tokenVersion === 'number') {
+            u.tokenVersion = data.tokenVersion;
+          }
+          if (data.failedAttempts?.increment) {
+            u.failedAttempts = (u.failedAttempts || 0) + data.failedAttempts.increment;
+          } else if (typeof data.failedAttempts === 'number') {
+            u.failedAttempts = data.failedAttempts;
+          }
+          Object.assign(u, { ...data, tokenVersion: u.tokenVersion, failedAttempts: u.failedAttempts });
+          return u;
+        }
+        return null;
+      }),
       findMany: jest.fn(async () => memoryStore.usuarios),
       count: jest.fn(async () => memoryStore.usuarios.length),
+    },
+    auditLog: {
+      create: jest.fn().mockResolvedValue({ id: 'audit-1' }),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
+    recoveryCode: {
+      deleteMany: jest.fn(async ({ where }: any) => {
+        memoryStore.recoveryCodes = memoryStore.recoveryCodes.filter((rc) => rc.usuarioId !== where.usuarioId);
+        return { count: 0 };
+      }),
+      createMany: jest.fn(async ({ data }: any) => {
+        data.forEach((item: any) => {
+          memoryStore.recoveryCodes.push({
+            id: 'rc-' + (memoryStore.recoveryCodes.length + 1),
+            usuarioId: item.usuarioId,
+            codeHash: item.codeHash,
+            usadoEn: null,
+          });
+        });
+        return { count: data.length };
+      }),
+      findMany: jest.fn(async ({ where }: any) => {
+        return memoryStore.recoveryCodes.filter(
+          (rc) => rc.usuarioId === where.usuarioId && (where.usadoEn === null ? rc.usadoEn === null : true),
+        );
+      }),
+      update: jest.fn(async ({ where, data }: any) => {
+        const rc = memoryStore.recoveryCodes.find((c) => c.id === where.id);
+        if (rc) Object.assign(rc, data);
+        return rc;
+      }),
     },
     doctor: {
       findUnique: jest.fn(async ({ where }: any) => {
@@ -121,8 +182,11 @@ describe('Backend Integration Tests (Supertest API)', () => {
       }),
       count: jest.fn(async () => memoryStore.citas.length),
     },
-    $transaction: jest.fn(async (cb: any) => {
-      return cb(mockPrismaService);
+    $transaction: jest.fn(async (cbOrList: any) => {
+      if (Array.isArray(cbOrList)) {
+        return Promise.all(cbOrList);
+      }
+      return cbOrList(mockPrismaService);
     }),
   };
 
@@ -335,6 +399,158 @@ describe('Backend Integration Tests (Supertest API)', () => {
 
       expect(res.body).toHaveProperty('error');
       expect(res.body.error.statusCode).toBe(403);
+    });
+  });
+
+  describe('5. Bloqueo escalonado de login (11 intentos fallidos -> 423 Locked)', () => {
+    it('bloquea la cuenta con 423 al superar los 10 intentos en etapa 0', async () => {
+      const lockUserEmail = 'lockout.test@clinica.com';
+      await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          nombre: 'Usuario Bloqueo',
+          email: lockUserEmail,
+          password: 'Password123!',
+          telefono: '+51955667788',
+        })
+        .expect(201);
+
+      // Realizar 10 intentos con contraseña errónea
+      for (let i = 0; i < 10; i++) {
+        await request(app.getHttpServer())
+          .post('/auth/login')
+          .send({
+            email: lockUserEmail,
+            password: 'BadPassword!',
+            turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+          })
+          .expect(401);
+      }
+
+      // El 11º intento debe responder 423 Locked con CUENTA_BLOQUEADA
+      const resLocked = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: lockUserEmail,
+          password: 'Password123!', // Incluso con contraseña correcta
+          turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+        })
+        .expect(423);
+
+      expect(resLocked.body.error).toBeDefined();
+      expect(resLocked.body.error.code).toBe('CUENTA_BLOQUEADA');
+      expect(resLocked.body.error.permanente).toBe(false);
+      expect(resLocked.body.error.retryAfterSeconds).toBeGreaterThan(0);
+    });
+  });
+
+  describe('6. Flujo completo de 2FA (setup -> enable -> login con requires2FA -> verify2Fa)', () => {
+    let twoFaToken: string;
+    let twoFaSecret: string;
+    let challengeToken: string;
+    const user2FaEmail = 'twofa.test@clinica.com';
+
+    it('registra usuario y genera secreto de configuración con /auth/2fa/setup', async () => {
+      const resReg = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          nombre: 'Usuario 2FA',
+          email: user2FaEmail,
+          password: 'Password123!',
+          telefono: '+51944332211',
+        })
+        .expect(201);
+
+      twoFaToken = resReg.body.accessToken;
+
+      const resSetup = await request(app.getHttpServer())
+        .post('/auth/2fa/setup')
+        .set('Authorization', `Bearer ${twoFaToken}`)
+        .expect(200);
+
+      expect(resSetup.body).toHaveProperty('secret');
+      expect(resSetup.body).toHaveProperty('qrCode');
+      twoFaSecret = resSetup.body.secret;
+    });
+
+    it('activa 2FA con código válido y recibe 8 códigos de recuperación', async () => {
+      const { authenticator } = require('otplib');
+      const validCode = authenticator.generate(twoFaSecret);
+
+      const resEnable = await request(app.getHttpServer())
+        .post('/auth/2fa/enable')
+        .set('Authorization', `Bearer ${twoFaToken}`)
+        .send({ code: validCode })
+        .expect(200);
+
+      expect(resEnable.body).toHaveProperty('recoveryCodes');
+      expect(resEnable.body.recoveryCodes).toHaveLength(8);
+    });
+
+    it('login con 2FA activo responde requires2FA: true y challengeToken', async () => {
+      const resLogin = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: user2FaEmail,
+          password: 'Password123!',
+          turnstileToken: 'XXXX.DUMMY.TOKEN.XXXX',
+        })
+        .expect(200);
+
+      expect(resLogin.body.requires2FA).toBe(true);
+      expect(resLogin.body.challengeToken).toBeDefined();
+      challengeToken = resLogin.body.challengeToken;
+    });
+
+    it('completa verificación con /auth/2fa/verify obteniendo tokens completos', async () => {
+      const { authenticator } = require('otplib');
+      const validCode = authenticator.generate(twoFaSecret);
+
+      const resVerify = await request(app.getHttpServer())
+        .post('/auth/2fa/verify')
+        .send({
+          challengeToken,
+          code: validCode,
+        })
+        .expect(200);
+
+      expect(resVerify.body).toHaveProperty('accessToken');
+      expect(resVerify.body).toHaveProperty('refreshToken');
+      expect(resVerify.body.user.email).toBe(user2FaEmail);
+    });
+  });
+
+  describe('7. Autorización fresca e invalidación de tokenVersion', () => {
+    it('revoca la sesión inmediatamente al incrementar tokenVersion (401)', async () => {
+      const uEmail = 'tokenversion.test@clinica.com';
+      const reg = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          nombre: 'Token Version Test',
+          email: uEmail,
+          password: 'Password123!',
+          telefono: '+51999888777',
+        })
+        .expect(201);
+
+      const token = reg.body.accessToken;
+
+      // El token funciona inicialmente
+      await request(app.getHttpServer())
+        .get('/citas/mias')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200);
+
+      // Simular cambio de rol o contraseña que incrementa tokenVersion e invalida caché
+      const userInDb = memoryStore.usuarios.find((u) => u.email === uEmail);
+      userInDb.tokenVersion = 1;
+      memoryStore.cache.delete(`usuario:auth:${userInDb.id}`);
+
+      // Ahora la misma petición debe ser rechazada con 401
+      await request(app.getHttpServer())
+        .get('/citas/mias')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(401);
     });
   });
 });

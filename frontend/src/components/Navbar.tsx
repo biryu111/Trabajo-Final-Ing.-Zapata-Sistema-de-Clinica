@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Activity, User, Calendar, LogOut, Shield, Menu, X, HeartHandshake } from 'lucide-react';
+import { Activity, User, Calendar, LogOut, Shield, Menu, X, HeartHandshake, KeyRound } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const Navbar: React.FC = () => {
@@ -77,6 +77,13 @@ export const Navbar: React.FC = () => {
             {/* Usuario Auth / Acciones */}
             {user ? (
               <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
+                <Link
+                  to="/seguridad/2fa"
+                  title="Seguridad y 2FA"
+                  className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-full transition-colors"
+                >
+                  <KeyRound className="w-4 h-4" />
+                </Link>
                 <Link
                   to="/cliente/perfil"
                   className="flex items-center gap-2.5 bg-slate-100/80 hover:bg-emerald-50 border border-slate-200/80 hover:border-emerald-200 rounded-full px-3.5 py-1.5 transition-all text-sm font-medium text-slate-700"
